@@ -245,7 +245,7 @@ ModelManifest.xml
 .fake/
 
 #Any additional visual studio crap
-*.sln
+MPL.sln
 *.vcxproj
 *.filters
 
