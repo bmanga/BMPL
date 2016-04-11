@@ -243,3 +243,11 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+#Any additional visual studio crap
+*.sln
+*.vcxproj
+*.filters
+
+#Main
+main.cpp
