@@ -1,6 +1,11 @@
 #pragma once
 #include <type_traits>
 
+namespace std
+{
+template<class...> class tuple;
+}
+
 namespace BMPL {
 template <class...> struct Typelist;
 
@@ -16,7 +21,8 @@ template <class TTypelist, class... Checks> struct ContainsAll;
 template <class TL, template<class> class Mapper> struct Map;
 template <class TL, template<class> class Filt> struct Filter;
 template <class TL> struct UniqueElements;
-template <class TL, template<class>class Fn> struct ForEachType;
+template <size_t RepeatN, class... Ts> struct Repeat;
+template <class TL> struct TupleType;
 
 template <class... Ts1, class... Ts2>
 struct AddBefore<Typelist<Ts1...>, Ts2...>
@@ -145,15 +151,25 @@ struct UniqueElements<Typelist<Ty, Ts...>>
 		>::Result, Ty>::Result;
 };
 
-template <class... Ts, template<class> class Fn>
-struct ForEachType<Typelist<Ts...>, Fn>
+template <class... Ts>
+struct Repeat<1, Ts...>
 {
-	ForEachType()
-	{
-		int swallow[] = { (Fn<Ts>{}(), 0)... };
-	}
+	using Result = Typelist<Ts...>;
 };
 
+template <size_t RepeatN, class... Ts>
+struct Repeat
+{
+	static_assert(RepeatN > 1, "Cannot instantiate less than 1 times");
+	using Result = typename Merge<Typelist<Ts...>, 
+		typename Repeat<RepeatN - 1, Ts...>::Result>::Result;
+};
+
+template <class... Ts>
+struct TupleType<Typelist<Ts...>>
+{
+	using Result = std::tuple<Ts...>;
+};
 
 } //namespace impl
 
@@ -186,4 +202,10 @@ using Filter = typename impl::Filter<TL, Filt>::Result;
 
 template <class TL>
 using UniqueElements = typename impl::UniqueElements<TL>::Result;
+
+template <size_t RepeatN, class... Ts>
+using Repeat = typename impl::Repeat<RepeatN, Ts...>::Result;
+
+template <class TL>
+using TupleType = typename impl::TupleType<TL>::Result;
 }//namespace BMPL
