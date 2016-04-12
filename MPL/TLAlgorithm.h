@@ -22,6 +22,7 @@ template <class TL, template<class> class Mapper> struct Map;
 template <class TL, template<class> class Filt> struct Filter;
 template <class TL> struct UniqueElements;
 template <size_t RepeatN, class... Ts> struct Repeat;
+template <class TL, template<class...> class> struct Rename;
 template <class TL> struct TupleType;
 
 template <class... Ts1, class... Ts2>
@@ -171,6 +172,12 @@ struct TupleType<Typelist<Ts...>>
 	using Result = std::tuple<Ts...>;
 };
 
+template <class... Ts, template<class...>class RenameTo>
+struct Rename<Typelist<Ts...>, RenameTo>
+{
+	using Result = RenameTo<Ts...>;
+};
+
 } //namespace impl
 
 
@@ -208,4 +215,7 @@ using Repeat = typename impl::Repeat<RepeatN, Ts...>::Result;
 
 template <class TL>
 using TupleType = typename impl::TupleType<TL>::Result;
+
+template <class TL, template<class...> class RenameTo>
+using Rename = typename impl::Rename<TL, RenameTo>::Result;
 }//namespace BMPL
