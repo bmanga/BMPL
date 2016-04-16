@@ -23,70 +23,69 @@ template <class TL, template<class> class Filt> struct Filter;
 template <class TL> struct UniqueElements;
 template <size_t RepeatN, class... Ts> struct Repeat;
 template <class TL, template<class...> class> struct Rename;
-template <class TL> struct TupleType;
 
 template <class... Ts1, class... Ts2>
 struct AddBefore<Typelist<Ts1...>, Ts2...>
 {
-	using Result = Typelist<Ts2..., Ts1...>;
+	using type = Typelist<Ts2..., Ts1...>;
 };
 
 template <class... Ts1, class... Ts2>
 struct AddAfter<Typelist<Ts1...>, Ts2...>
 {
-	using Result = Typelist<Ts1..., Ts2...>;
+	using type = Typelist<Ts1..., Ts2...>;
 };
 
 template <class... Ts, class Erase>
 struct EraseFirstOf<Typelist<Erase, Ts...>, Erase>
 {
-	using Result = Typelist<Ts...>;
+	using type = Typelist<Ts...>;
 };
 
 template <class Ty, class... Ts, class Erase>
 struct EraseFirstOf<Typelist<Ty, Ts...>, Erase>
 {
-	using Result = typename AddBefore<
-		typename EraseFirstOf<Typelist<Ts...>, Erase>::Result,
-		Ty>::Result;
+	using type = typename AddBefore<
+		typename EraseFirstOf<Typelist<Ts...>, Erase>::type,
+		Ty>::type;
 };
 
 template <class Ty, class Erase>
 struct EraseAllOf<Typelist<Ty>, Erase>
 {
-	using Result = Typelist<Ty>;
+	using type = Typelist<Ty>;
 };
 
 template <class Ty, class Erase>
 struct EraseAllOf<Typelist<Ty, Erase>, Erase>
 {
-	using Result = Typelist<Ty>;
+	using type = Typelist<Ty>;
 };
 
 template <class... Ts, class Erase>
 struct EraseAllOf<Typelist<Erase, Ts...>, Erase>
 {
-	using Result = typename EraseAllOf<Typelist<Ts...>, Erase>::Result;
+	using type = typename EraseAllOf<Typelist<Ts...>, Erase>::type;
 };
 
 template <class Ty, class... Ts, class Erase>
 struct EraseAllOf<Typelist<Ty, Ts...>, Erase>
 {
-	using Result = typename AddBefore<
-		typename EraseAllOf<Typelist<Ts...>, Erase>::Result,
-		Ty>::Result;
+	using type = typename AddBefore<
+		typename EraseAllOf<Typelist<Ts...>, Erase>::type,
+		Ty>::type;
 };
 
 template <class... Ts1, class... Ts2>
 struct Merge<Typelist<Ts1...>, Typelist<Ts2...>>
 {
-	using Result = Typelist<Ts1..., Ts2...>;
+	using type = Typelist<Ts1..., Ts2...>;
 };
 
 template <class... Ts1, class... Ts2, class... TLs>
 struct Merge<Typelist<Ts1...>, Typelist<Ts2...>, TLs...>
 {
-	using Result = typename Merge<Typelist<Ts1..., Ts2...>, TLs...>::Result;
+	using type = typename Merge<Typelist<Ts1..., Ts2...>, TLs...>::type;
 };
 
 template <class T, class Ty>
@@ -119,63 +118,57 @@ struct ContainsAll<TL, Check, Checks...>
 template <class... Ts, template<class> class Mapper>
 struct Map<Typelist<Ts...>, Mapper>
 {
-	using Result = Typelist<typename Mapper<Ts>::type...>;
+	using type = Typelist<typename Mapper<Ts>::type...>;
 };
 
 template <class Ty, template<class> class Filt>
 struct Filter<Typelist<Ty>, Filt>
 {
-	using Result = std::conditional_t<Filt<Ty>::value, Typelist<Ty>, Typelist<>>;
+	using type = std::conditional_t<Filt<Ty>::value, Typelist<Ty>, Typelist<>>;
 };
 
 template <class Ty, class... Ts, template<class> class Filt>
 struct Filter <Typelist<Ty, Ts...>, Filt>
 {
-	using Next = typename Filter<Typelist<Ts...>, Filt>::Result;
-	using Result = std::conditional_t<Filt<Ty>::value,
-		typename AddBefore<Next, Ty>::Result, 
+	using Next = typename Filter<Typelist<Ts...>, Filt>::type;
+	using type = std::conditional_t<Filt<Ty>::value,
+		typename AddBefore<Next, Ty>::type, 
 		Next>;
 };
 
 template <class Ty>
 struct UniqueElements<Typelist<Ty>>
 {
-	using Result = Typelist<Ty>;
+	using type = Typelist<Ty>;
 };
 
 template <class Ty, class... Ts>
 struct UniqueElements<Typelist<Ty, Ts...>>
 {
-	using Result = typename AddBefore<
+	using type = typename AddBefore<
 		typename UniqueElements<
-		typename EraseAllOf<Typelist<Ts...>, Ty>::Result
-		>::Result, Ty>::Result;
+		typename EraseAllOf<Typelist<Ts...>, Ty>::type
+		>::type, Ty>::type;
 };
 
 template <class... Ts>
 struct Repeat<1, Ts...>
 {
-	using Result = Typelist<Ts...>;
+	using type = Typelist<Ts...>;
 };
 
 template <size_t RepeatN, class... Ts>
 struct Repeat
 {
 	static_assert(RepeatN > 1, "Cannot instantiate less than 1 times");
-	using Result = typename Merge<Typelist<Ts...>, 
-		typename Repeat<RepeatN - 1, Ts...>::Result>::Result;
-};
-
-template <class... Ts>
-struct TupleType<Typelist<Ts...>>
-{
-	using Result = std::tuple<Ts...>;
+	using type = typename Merge<Typelist<Ts...>, 
+		typename Repeat<RepeatN - 1, Ts...>::type>::type;
 };
 
 template <class... Ts, template<class...>class RenameTo>
 struct Rename<Typelist<Ts...>, RenameTo>
 {
-	using Result = RenameTo<Ts...>;
+	using type = RenameTo<Ts...>;
 };
 
 } //namespace impl
@@ -183,13 +176,13 @@ struct Rename<Typelist<Ts...>, RenameTo>
 
 //Interface: Alias and variable templates
 template <class TL, class Erase>
-using EraseFirstOf = typename impl::EraseFirstOf <TL, Erase> ::Result;
+using EraseFirstOf = typename impl::EraseFirstOf <TL, Erase> ::type;
 
 template <class TL, class Erase>
-using EraseAllOf = typename impl::EraseAllOf<TL, Erase>::Result;
+using EraseAllOf = typename impl::EraseAllOf<TL, Erase>::type;
 
 template <class... TLs>
-using Merge = typename impl::Merge<TLs...>::Result;
+using Merge = typename impl::Merge<TLs...>::type;
 
 template <class TL, class Ty>
 static constexpr size_t Count = impl::Count<TL, Ty>::value;
@@ -202,20 +195,20 @@ static constexpr bool Contains<TL, Typelist<Ts...>> =
 	impl::ContainsAll<TL, Ts...>::value;
 
 template <class TL, template<class> class Mapper>
-using Map = typename impl::Map<TL, Mapper>::Result;
+using Map = typename impl::Map<TL, Mapper>::type;
 
 template <class TL, template<class> class Filt>
-using Filter = typename impl::Filter<TL, Filt>::Result;
+using Filter = typename impl::Filter<TL, Filt>::type;
 
 template <class TL>
-using UniqueElements = typename impl::UniqueElements<TL>::Result;
+using UniqueElements = typename impl::UniqueElements<TL>::type;
 
 template <size_t RepeatN, class... Ts>
-using Repeat = typename impl::Repeat<RepeatN, Ts...>::Result;
+using Repeat = typename impl::Repeat<RepeatN, Ts...>::type;
 
 template <class TL>
-using TupleType = typename impl::TupleType<TL>::Result;
+using TupleType = typename impl::Rename<TL, std::tuple>::type;
 
 template <class TL, template<class...> class RenameTo>
-using Rename = typename impl::Rename<TL, RenameTo>::Result;
+using Rename = typename impl::Rename<TL, RenameTo>::type;
 }//namespace BMPL

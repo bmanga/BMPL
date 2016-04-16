@@ -31,6 +31,26 @@ constexpr decltype(auto) ApplyTuple(Fn&& fn, TTuple&& tuple,
 	return std::forward<Fn>(fn)(std::get<Is>(std::forward<TTuple>(tuple))...);
 }
 
+template <class Ty>
+struct Type
+{
+	using type = Ty;
+};
+
+template <class TL> struct ForEachTypeAsArg;
+template <class... Ts> 
+struct ForEachTypeAsArg<Typelist<Ts...>>
+{
+	template <class Fn>
+	static constexpr void execute(Fn&& fn)
+	{
+		return (void)std::initializer_list<int>{
+			(std::forward<Fn>(fn)(Type<Ts>{}), 0)...
+		};
+	}
+};
+
+
 }//namespace impl
 
 template <class TL, template<class> class Fn>
@@ -38,6 +58,8 @@ constexpr void ForEachType()
 {
 	return (void)impl::ForEachType<TL, Fn>::execute();
 }
+
+
 
 template <class Fn, class... Args>
 constexpr void ForEachArg (Fn&& fn, Args&&... args)
@@ -62,4 +84,12 @@ constexpr decltype(auto) ApplyTuple (Fn&& fn, TTuple&& tuple)
 	return impl::ApplyTuple(std::forward<Fn>(fn), std::forward<TTuple>(tuple),
 		std::make_index_sequence < std::tuple_size<std::decay_t<TTuple>>::value > {});
 }
+
+template <class TL, class Fn>
+constexpr void ForEachTypeAsArg(Fn&& fn)
+{
+	return (void)impl::ForEachTypeAsArg<TL>::execute(std::forward<Fn>(fn));
 }
+}//namespace BMPL
+
+#define BMPL_TYPE(var) typename decltype(var)::type
